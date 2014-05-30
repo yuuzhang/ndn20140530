@@ -1,0 +1,13 @@
+# ZhangYu 07-Mar-2014 
+
+router
+
+# node	comment	yPos	xPos	systemID
+Node1	NA	50	125	1	
+Node2	NA	147	116	2	
+
+link
+
+#srcNode dstNode bandwidth metric	delay	queue	
+#Src2	Node1	10Mbps	11	0.399s	80			
+Node1	Node2	10Mbps	9	0.1097s	200	

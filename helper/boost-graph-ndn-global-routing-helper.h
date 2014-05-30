@@ -264,7 +264,56 @@ struct WeightCombine :
       return make_tuple (a.get<0> (), a.get<1> () + b.get<1> (), a.get<2> () + b.get<2> ());
   }
 };
-  
+
+/*
+ * 2014-1-4，因为在原始的代码中，当节点0为源节点调用dijkstra算法时，例如节点4，能够得到如下
+ * ZhangYu 2014-1-3, Node:4   face:dev[0]=net(0,0-1)  with distance:2，含义是到从节点0到节点4的距离是2，从节点0的出口faces是dev[0]=net(0,0-1)。
+ * 而我在多路径计算中，希望能得到的是从节点4到节点0的所有的faces，即使麻烦，那也至少是4-1的face，而不是0-1
+ * 如果有4-1，那么就可以通过追溯parent node而得到整条path
+ */
+struct ZYWeightCombine :
+    public std::binary_function<uint32_t,
+                                property_traits< EdgeWeights >::reference,
+                                uint32_t>
+{
+  uint32_t
+  operator () (uint32_t a, property_traits< EdgeWeights >::reference b) const
+  {
+    return a + b.get<1> ();
+  }
+
+  tuple< ns3::Ptr<ns3::ndn::Face>, uint32_t, double >
+  operator () (tuple< ns3::Ptr<ns3::ndn::Face>, uint32_t, double > a,
+               property_traits< EdgeWeights >::reference b) const
+  {
+	/*b已经是<face,uint,double>的元组了，这里只是告诉使用这样的距离计算方法。b的产生实在本文件下面的的get(weightmap,edge)的定义中
+	 * get(weightmap,edge）是在dijkstra_shortest_path中调用了 relax， relax中有 const W& w_e = get(w, e);所以除非修改get(w,e)
+	 * 否则任何在dijkstra外部的对b的修改是无效的。
+	 * 2013-5-15
+	 */
+	/*
+	* ZhangYu 2014-3-23 因为multipath产生了错误，所以要理解compare和combine到底干了什么
+	* a<1>是当前节点的标号，b<1>是当前边的代价，那么返回的应该是新的节点的代价
+	*/
+	//std::cout << "ZhangYu 2014-3-21 a<1>" << a.get<1>() << "   b<1>" << b.get<1>() << "   a<2> "<< a.get<2>() << "  b<2>" << b.get<2>() << std::endl;
+	//std::cout << "ZhangYu 2014-3-212： a<1>+b<1>: " << a.get<1>() +b.get<1>() << std::endl;
+    if (a.get<0> () == 0)
+    {
+      return make_tuple (b.get<0> (), a.get<1> () + b.get<1> (), a.get<2> () + b.get<2> ());
+    }
+    else
+      {
+      //std::cout<< "ZhangYu ***********************************************************************************************************  " << *(b.get<0>()) <<  std::endl;
+      return make_tuple (b.get<0> (), a.get<1> () + b.get<1> (), a.get<2> () + b.get<2> ());
+      }
+  }
+
+  //ZhangYu 2014-1-4添加，为了多路径计算能够追溯得到整条路径的faces。为了使得源代码的改动最小，所以在返回tuple的最后添加b.get<0>()，
+
+};
+
+
+
 template<>
 struct property_traits< VertexIds >
 {

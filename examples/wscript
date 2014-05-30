@@ -24,6 +24,10 @@ def build(bld):
     obj = bld.create_ns3_program('ndn-zipf-mandelbrot', all_modules)
     obj.source = 'ndn-zipf-mandelbrot.cc'
 
+    #ZhangYu 2014-3-7 add my new file
+    obj = bld.create_ns3_program('ndn-zhangyu-multipath', ['ndnSIM'])
+    obj.source = 'ndn-zhangyu-multipath.cc'
+
 
     obj = bld.create_ns3_program('ndn-simple-with-content-freshness', all_modules)
     obj.source = ['ndn-simple-with-content-freshness.cc',

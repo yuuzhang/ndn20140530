@@ -1,0 +1,32 @@
+# topo-for-DijkstraTest4Nodes.txt
+
+
+# any empty lines and lines starting with '#' symbol is ignored
+#
+# The file should contain exactly two sections: router and link, each starting with the corresponding keyword
+#
+# router section defines topology nodes and their relative positions (e.g., to use in visualizer)
+router
+
+# each line in this section represents one router and should have the following data
+# node  comment     yPos    xPos
+Node0   NA          0       1
+Node2   NA          0       2
+Node1   NA          0       3
+Node3   NA          0       4
+
+# Note that `node` can be any string. It is possible to access to the node by name using Names::Find, see examples.
+
+# link section defines point-to-point links between nodes and characteristics of these links
+link
+
+# Each line should be in the following format (only first two are required, the rest can be omitted)
+# srcNode   dstNode     bandwidth   metric  delay   queue
+# bandwidth: link bandwidth
+# metric: routing metric
+# delay:  link delay
+# queue:  MaxPackets for transmission queue on the link (both directions)
+Node0       Node2       1Mbps       1       100ms   10
+Node2       Node1       1Mbps       1       10ms    10
+Node1       Node3       1Mbps       1       10ms    10
+

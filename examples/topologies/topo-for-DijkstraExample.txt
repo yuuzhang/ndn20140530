@@ -1,0 +1,51 @@
+# topo-for-DijkstraExample.txt
+
+#   /--------\	    /-\	        /-\
+#   |Consumer|<---->| |<------->| |
+#   \--------/	    \-/	        \-/
+#       ^   	     ^ 	         ^
+#       |            |           |   1Mbps/10ms delay
+#       v            v           v
+#      /-\          /-\         /-\
+#      | |<-------->| |<------->| |
+#      \-/          \-/         \-/
+#       ^   	     ^ 	         ^
+#       |            |           |
+#       v            v           v
+#      /-\	    /-\	     /--------\
+#      | |<-------->| |<---->|Producer|
+#      \-/          \-/      \--------/
+
+# any empty lines and lines starting with '#' symbol is ignored
+#
+# The file should contain exactly two sections: router and link, each starting with the corresponding keyword
+#
+# router section defines topology nodes and their relative positions (e.g., to use in visualizer)
+router
+
+# each line in this section represents one router and should have the following data
+# node  comment     yPos    xPos
+Node0   NA          1       1
+Node1   NA          3       3
+Node2   NA          3       2
+Node3   NA          4       5
+Node4   NA          2       7
+# Note that `node` can be any string. It is possible to access to the node by name using Names::Find, see examples.
+
+# link section defines point-to-point links between nodes and characteristics of these links
+link
+
+# Each line should be in the following format (only first two are required, the rest can be omitted)
+# srcNode   dstNode     bandwidth   metric  delay   queue
+# bandwidth: link bandwidth
+# metric: routing metric
+# delay:  link delay
+# queue:  MaxPackets for transmission queue on the link (both directions)
+Node0       Node2       1Mbps       5       100ms   10
+Node0       Node4       1Mbps       5       10ms    10
+Node2       Node1       1Mbps       7       10ms    10
+Node1       Node3       1Mbps       2       100ms   10
+Node1       Node4       1Mbps       2       10ms    10
+Node2       Node3       1Mbps       3       10ms    10
+Node3       Node4       1Mbps       2       10ms    10
+
