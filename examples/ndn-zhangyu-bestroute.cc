@@ -67,8 +67,8 @@ main (int argc, char *argv[])
 
   AnnotatedTopologyReader topologyReader ("", 50);
   int nodesNumber=5;
-  //topologyReader.SetFileName ("src/ndnSIM/examples/topologies/26node-result-1.txt");
-  topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-for-CompareMultiPath.txt");
+  topologyReader.SetFileName ("src/ndnSIM/examples/topologies/26node-result-1.txt");
+  //topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-for-CompareMultiPath.txt");
 
   //topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-6-node.txt");
   topologyReader.Read ();
@@ -92,7 +92,7 @@ main (int argc, char *argv[])
   //设置和安装业务
 
   ndn::AppHelper consumerHelper ("ns3::ndn::ConsumerCbr");
-  consumerHelper.SetAttribute ("Frequency", StringValue ("200")); // 100 interests a second
+  consumerHelper.SetAttribute ("Frequency", StringValue ("500")); // 100 interests a second
 
   //for(int i=0;i<nodesNumber/2;i++)
   for(int i=0;i<1;i++)
@@ -123,9 +123,9 @@ main (int argc, char *argv[])
   }
 
   // Calculate and install FIBs
-  //ndn::GlobalRoutingHelper::CalculateRoutes ();
+  ndn::GlobalRoutingHelper::CalculateRoutes ();
   //ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes();
-  ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutes();
+  //ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutes();
 
   // The failure of the link connecting consumer and router will start from seconds 10.0 to 15.0
   //Simulator::Schedule (Seconds (10.0), ndn::LinkControlHelper::FailLink, Names::Find<Node> ("Node0"),Names::Find<Node> ("Node4"));
@@ -135,15 +135,15 @@ main (int argc, char *argv[])
 
   //ZhangYu Add the trace
 
-  ndn::CsTracer::InstallAll ("cs-trace-multipath.txt", Seconds (1));
+  ndn::CsTracer::InstallAll ("cs-trace-bestroute.txt", Seconds (1));
 
-  ndn::L3AggregateTracer::InstallAll ("aggregate-trace-multipath.txt", Seconds (1));
+  ndn::L3AggregateTracer::InstallAll ("aggregate-trace-bestroute.txt", Seconds (1));
 
-  ndn::L3RateTracer::InstallAll ("rate-trace-multipath.txt", Seconds (1));
+  ndn::L3RateTracer::InstallAll ("rate-trace-bestroute.txt", Seconds (1));
 
-  ndn::AppDelayTracer::InstallAll ("app-delays-trace-multipath.txt");
+  ndn::AppDelayTracer::InstallAll ("app-delays-trace-bestroute.txt");
 
-  L2RateTracer::InstallAll ("drop-trace-multipath.txt", Seconds (1));
+  L2RateTracer::InstallAll ("drop-trace-bestroute.txt", Seconds (1));
 
   Simulator::Run ();
   Simulator::Destroy ();
