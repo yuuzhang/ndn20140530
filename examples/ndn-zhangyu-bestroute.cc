@@ -65,10 +65,10 @@ main (int argc, char *argv[])
   CommandLine cmd;
   cmd.Parse (argc, argv);
 
-  AnnotatedTopologyReader topologyReader ("", 50);
-  int nodesNumber=5;
-  topologyReader.SetFileName ("src/ndnSIM/examples/topologies/26node-result-1.txt");
-  //topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-for-CompareMultiPath.txt");
+  AnnotatedTopologyReader topologyReader ("", 20);
+  //int nodesNumber=5;
+  //topologyReader.SetFileName ("src/ndnSIM/examples/topologies/26node-result-1.txt");
+  topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-for-CompareMultiPath.txt");
 
   //topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-6-node.txt");
   topologyReader.Read ();
@@ -78,7 +78,7 @@ main (int argc, char *argv[])
   ndn::StackHelper ndnHelper;
   ndnHelper.SetForwardingStrategy ("ns3::ndn::fw::Flooding");
   //ndnHelper.SetForwardingStrategy ("ns3::ndn::fw::BestRoute");
-  //ndnHelper.SetForwardingStrategy("ns3::ndn::fw::SmartFlooding");
+  //ndnHelper.SetForwardingStrategy("ns3::ndn::fw::SmartFloodng");
   ndnHelper.SetContentStore ("ns3::ndn::cs::Lru",
                               "MaxSize", "1");
   ndnHelper.InstallAll ();
@@ -92,11 +92,41 @@ main (int argc, char *argv[])
   //设置和安装业务
 
   ndn::AppHelper consumerHelper ("ns3::ndn::ConsumerCbr");
-  consumerHelper.SetAttribute ("Frequency", StringValue ("500")); // 100 interests a second
+  consumerHelper.SetAttribute ("Frequency", StringValue ("100")); // 100 interests a second
 
   //for(int i=0;i<nodesNumber/2;i++)
-  for(int i=0;i<1;i++)
+  //for(int i=0;i<1;i++)
   {
+	  int i=0;
+	  // Getting containers for the consumer/producer
+	  Ptr<Node> consumer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (i));
+	  // on the first consumer node install a Consumer application
+	  // that will express interests in /dst1 namespace
+	  consumerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(i));
+	  consumerHelper.Install (consumer1);
+	  std::cout <<"ZhangYu 2014-3-7 consumer1->GetId(): " <<consumer1->GetId() << std::endl;
+  }
+  ndn::AppHelper producerHelper ("ns3::ndn::Producer");
+  producerHelper.SetAttribute ("PayloadSize", StringValue("1024"));
+
+
+  //for(int i=nodesNumber/2;i<nodesNumber;i++)
+  //for(int i=nodesNumber-1;i<nodesNumber;i++)
+  {
+	  int i=4;
+	  //producerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(i-nodesNumber/2));
+	  producerHelper.SetPrefix ("/Node0");
+	  Ptr<Node> producer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (i));
+	  // install producer that will satisfy Interests in /dst1 namespace
+	  //ndnGlobalRoutingHelper.AddOrigins ("/Node"+boost::lexical_cast<std::string>(i-nodesNumber/2), producer1);
+	  ndnGlobalRoutingHelper.AddOrigins ("/Node0", producer1);
+	  producerHelper.Install(producer1);
+	  std::cout <<"ZhangYu 2014-3-7 producer1->GetId(): " <<producer1->GetId() << std::endl;
+  }
+
+  //for(int i=0;i<1;i++)
+  {
+	  int i=2;
 	  // Getting containers for the consumer/producer
 	  Ptr<Node> consumer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (i));
 	  // on the first consumer node install a Consumer application
@@ -106,18 +136,15 @@ main (int argc, char *argv[])
 	  std::cout <<"ZhangYu 2014-3-7 consumer1->GetId(): " <<consumer1->GetId() << std::endl;
   }
 
-  ndn::AppHelper producerHelper ("ns3::ndn::Producer");
-  producerHelper.SetAttribute ("PayloadSize", StringValue("1024"));
-
-  //for(int i=nodesNumber/2;i<nodesNumber;i++)
-  for(int i=nodesNumber-1;i<nodesNumber;i++)
+  //for(int i=nodesNumber-1;i<nodesNumber;i++)
   {
+	  int i=3;
 	  //producerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(i-nodesNumber/2));
-	  producerHelper.SetPrefix ("/Node0");
+	  producerHelper.SetPrefix ("/Node2");
 	  Ptr<Node> producer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (i));
 	  // install producer that will satisfy Interests in /dst1 namespace
 	  //ndnGlobalRoutingHelper.AddOrigins ("/Node"+boost::lexical_cast<std::string>(i-nodesNumber/2), producer1);
-	  ndnGlobalRoutingHelper.AddOrigins ("/Node0", producer1);
+	  ndnGlobalRoutingHelper.AddOrigins ("/Node2", producer1);
 	  producerHelper.Install(producer1);
 	  std::cout <<"ZhangYu 2014-3-7 producer1->GetId(): " <<producer1->GetId() << std::endl;
   }

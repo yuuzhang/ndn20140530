@@ -49,6 +49,9 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
+
+using namespace std;
+
 //---ZhangYu
 
 using namespace ns3;
@@ -65,14 +68,13 @@ main (int argc, char *argv[])
   CommandLine cmd;
   cmd.Parse (argc, argv);
 
-  AnnotatedTopologyReader topologyReader ("", 50);
-  int nodesNumber=5;
-  topologyReader.SetFileName ("src/ndnSIM/examples/topologies/26node-result-1.txt");
-  //topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-for-CompareMultiPath.txt");
+  AnnotatedTopologyReader topologyReader ("", 20);
+  //int nodesNumber=5;
+  //topologyReader.SetFileName ("src/ndnSIM/examples/topologies/26node-result-1.txt");
+  topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-for-CompareMultiPath.txt");
 
   //topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-6-node.txt");
   topologyReader.Read ();
-
 
   // Install NDN stack on all nodes
   ndn::StackHelper ndnHelper;
@@ -91,12 +93,14 @@ main (int argc, char *argv[])
 
   //设置和安装业务
 
+
   ndn::AppHelper consumerHelper ("ns3::ndn::ConsumerCbr");
-  consumerHelper.SetAttribute ("Frequency", StringValue ("500")); // 100 interests a second
+  consumerHelper.SetAttribute ("Frequency", StringValue ("1000")); // 100 interests a second
 
   //for(int i=0;i<nodesNumber/2;i++)
-  for(int i=0;i<1;i++)
+  //for(int i=0;i<1;i++)
   {
+	  int i=0;
 	  // Getting containers for the consumer/producer
 	  Ptr<Node> consumer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (i));
 	  // on the first consumer node install a Consumer application
@@ -105,13 +109,14 @@ main (int argc, char *argv[])
 	  consumerHelper.Install (consumer1);
 	  std::cout <<"ZhangYu 2014-3-7 consumer1->GetId(): " <<consumer1->GetId() << std::endl;
   }
-
   ndn::AppHelper producerHelper ("ns3::ndn::Producer");
   producerHelper.SetAttribute ("PayloadSize", StringValue("1024"));
 
+
   //for(int i=nodesNumber/2;i<nodesNumber;i++)
-  for(int i=nodesNumber-1;i<nodesNumber;i++)
+  //for(int i=nodesNumber-1;i<nodesNumber;i++)
   {
+	  int i=4;
 	  //producerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(i-nodesNumber/2));
 	  producerHelper.SetPrefix ("/Node0");
 	  Ptr<Node> producer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (i));
@@ -122,6 +127,32 @@ main (int argc, char *argv[])
 	  std::cout <<"ZhangYu 2014-3-7 producer1->GetId(): " <<producer1->GetId() << std::endl;
   }
 
+  //for(int i=0;i<1;i++)
+//  {
+//	  int i=2;
+//	  // Getting containers for the consumer/producer
+//	  Ptr<Node> consumer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (i));
+//	  // on the first consumer node install a Consumer application
+//	  // that will express interests in /dst1 namespace
+//	  consumerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(i));
+//	  consumerHelper.Install (consumer1);
+//	  std::cout <<"ZhangYu 2014-3-7 consumer1->GetId(): " <<consumer1->GetId() << std::endl;
+//  }
+//
+//  //for(int i=nodesNumber-1;i<nodesNumber;i++)
+//  {
+//	  int i=3;
+//	  //producerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(i-nodesNumber/2));
+//	  producerHelper.SetPrefix ("/Node2");
+//	  Ptr<Node> producer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (i));
+//	  // install producer that will satisfy Interests in /dst1 namespace
+//	  //ndnGlobalRoutingHelper.AddOrigins ("/Node"+boost::lexical_cast<std::string>(i-nodesNumber/2), producer1);
+//	  ndnGlobalRoutingHelper.AddOrigins ("/Node2", producer1);
+//	  producerHelper.Install(producer1);
+//	  std::cout <<"ZhangYu 2014-3-7 producer1->GetId(): " <<producer1->GetId() << std::endl;
+//  }
+
+
   // Calculate and install FIBs
   //ndn::GlobalRoutingHelper::CalculateRoutes ();
   ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes();
@@ -131,7 +162,7 @@ main (int argc, char *argv[])
   //Simulator::Schedule (Seconds (10.0), ndn::LinkControlHelper::FailLink, Names::Find<Node> ("Node0"),Names::Find<Node> ("Node4"));
   //Simulator::Schedule (Seconds (15.0), ndn::LinkControlHelper::UpLink,   Names::Find<Node> ("Node0"),Names::Find<Node> ("Node4"));
 
-  Simulator::Stop (Seconds (500.0));
+  Simulator::Stop (Seconds (5.0));
 
   //ZhangYu Add the trace
 
