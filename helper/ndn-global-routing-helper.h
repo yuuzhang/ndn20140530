@@ -138,6 +138,11 @@ public:
   static void
   CalculateNoCommLinkMultiPathRoutes();
 
+  /*
+   * @ZY, 2015-1-7 no common link multi-path algorithms PairFirst
+   */
+  static void
+  CalculateNoCommLinkMultiPathRoutesPairFirst();
 
 private:
   void

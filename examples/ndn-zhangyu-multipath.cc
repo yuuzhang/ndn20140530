@@ -174,7 +174,8 @@ main (int argc, char *argv[])
   // Calculate and install FIBs
   //ndn::GlobalRoutingHelper::CalculateRoutes ();
   //ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes();
-  ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutes();
+  //ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutes();
+  ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst();
 
   // The failure of the link connecting consumer and router will start from seconds 10.0 to 15.0
   //Simulator::Schedule (Seconds (10.0), ndn::LinkControlHelper::FailLink, Names::Find<Node> ("Node0"),Names::Find<Node> ("Node4"));
