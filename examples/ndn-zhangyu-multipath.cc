@@ -42,7 +42,7 @@
 //ZhangYu 2014-2-7 for DynamicRouting，否则不认识Name，试了很多.h才知道要包含ndn-interest.h
 #include "ns3/names.h"
 #include "ns3/ndn-name.h"
-#include "string.h"
+#include "ns3/string.h"
 #include "ns3/ndn-interest.h"
 #include "ns3/ptr.h"
 #include <boost/ref.hpp>
@@ -65,46 +65,35 @@ using namespace ns3;
 int
 main (int argc, char *argv[])
 {
-  CommandLine cmd;
-  cmd.Parse (argc, argv);
+	bool manualAssign=false;
+	int InterestsPerSec=200;
+	int simulationSpan=1;
+	string routingName="MultiPath";
+
+	CommandLine cmd;
+	cmd.AddValue("InterestsPerSec","Interests emit by consumer per second",InterestsPerSec);
+	cmd.AddValue("simulationSpan","Simulation span time by seconds",simulationSpan);
+	cmd.AddValue ("routingName", "could be Flooding, BestRoute, MultiPath, MultiPathPairFirst", routingName);
+	cmd.Parse(argc,argv);
+	std::cout << "routingName: " << routingName << "   " << InterestsPerSec << " " << simulationSpan << std::endl;
 
   AnnotatedTopologyReader topologyReader ("", 20);
-  //int nodesNumber=5;
-  //topologyReader.SetFileName ("src/ndnSIM/examples/topologies/26node-result-1.txt");
-  topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-for-CompareMultiPath.txt");
 
+  topologyReader.SetFileName ("src/ndnSIM/examples/topologies/26node-result-1.txt");
+  //topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-for-CompareMultiPath.txt");
   //topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-6-node.txt");
-  topologyReader.Read ();
 
+  topologyReader.Read ();
+  int nodesNumber=topologyReader.GetNodes().size();
 
   // Install NDN stack on all nodes
   ndn::StackHelper ndnHelper;
-
-
-  // for define different routing policy
-  string routingName="Flooding";
-  cmd.AddValue ("routing name string", "could be Flooding, BestRoute, MultiPath", routingName);
-  std::cout << "routingName: " << routingName;
-  if(routingName.compare("Flooding")==0)
-  {	  std::cout << "Multi";
-  }
-  else if(routingName.compare("MultiPath")==0)
-  {
-
-  }
-  else if(routingName.compare("BestRoute")==0)
-  {
-
-  }
-
-
   ndnHelper.SetForwardingStrategy ("ns3::ndn::fw::Flooding");
   //ndnHelper.SetForwardingStrategy ("ns3::ndn::fw::BestRoute");
-  //ndnHelper.SetForwardingStrategy("ns3::ndn::fw::SmartFlooding");
-  ndnHelper.SetContentStore ("ns3::ndn::cs::Lru",
-                              "MaxSize", "1");
-  ndnHelper.InstallAll ();
+  //ndnHelper.SetForwardingStrategy("ns3::ndn::fw::SmartFloodng");
 
+  ndnHelper.SetContentStore ("ns3::ndn::cs::Lru","MaxSize", "1");
+  ndnHelper.InstallAll ();
   topologyReader.ApplyOspfMetric();  //使得链路metric生效
 
   // Installing global routing interface on all nodes
@@ -112,88 +101,81 @@ main (int argc, char *argv[])
   ndnGlobalRoutingHelper.InstallAll ();
 
   //设置和安装业务
-
   ndn::AppHelper consumerHelper ("ns3::ndn::ConsumerCbr");
-  consumerHelper.SetAttribute ("Frequency", StringValue ("120")); // 100 interests a second
+  consumerHelper.SetAttribute ("Frequency", StringValue (boost::lexical_cast<std::string>(InterestsPerSec))); // 100 interests a second
 
-  //for(int i=0;i<nodesNumber/2;i++)
-  //for(int i=0;i<1;i++)
-  {
-	  int i=0;
-	  // Getting containers for the consumer/producer
-	  Ptr<Node> consumer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (i));
-	  // on the first consumer node install a Consumer application
-	  // that will express interests in /dst1 namespace
-	  consumerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(i));
-	  consumerHelper.Install (consumer1);
-	  std::cout <<"ZhangYu 2014-3-7 consumer1->GetId(): " <<consumer1->GetId() << std::endl;
-  }
   ndn::AppHelper producerHelper ("ns3::ndn::Producer");
   producerHelper.SetAttribute ("PayloadSize", StringValue("1024"));
 
 
-  //for(int i=nodesNumber/2;i<nodesNumber;i++)
-  //for(int i=nodesNumber-1;i<nodesNumber;i++)
+  std::vector<int> consumerNodes,producerNodes;
+
+  //生成consumer和producer的节点号动态数组
+  if(manualAssign)
   {
-	  int i=4;
-	  //producerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(i-nodesNumber/2));
-	  producerHelper.SetPrefix ("/Node0");
-	  Ptr<Node> producer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (i));
+	  int tmpConsumer[]={0,2};
+	  int tmpProducer[]={4,3};
+	  consumerNodes.assign(tmpConsumer,tmpConsumer+sizeof(tmpConsumer)/sizeof(int));
+	  producerNodes.assign(tmpProducer,tmpProducer+sizeof(tmpConsumer)/sizeof(int));
+  }
+  else
+  {
+	  for(int i=0;i<nodesNumber/2;i++)
+	  {
+		  consumerNodes.push_back(i);
+		  producerNodes.push_back(i+nodesNumber/2);
+	  }
+  }
+  //根据得到的consumer和producer节点号向量生成节点
+  for(uint32_t i=0;i<consumerNodes.size();i++)
+  {
+	  // Getting containers for the consumer/producer
+	  Ptr<Node> consumer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (consumerNodes[i]));
+	  // that will express interests in /dst1 namespace
+	  consumerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(consumerNodes[i]));
+	  consumerHelper.Install (consumer1);
+	  std::cout <<"ZhangYu 2014-3-7 consumer1->GetId(): " <<consumer1->GetId() << std::endl;
+  }
+
+  for(uint32_t i=0;i<producerNodes.size();i++)
+  {
+	  //认为producer节点的Prefix和对应位置的consumer节点一致
+	  producerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(consumerNodes[i]));
+	  Ptr<Node> producer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (producerNodes[i]));
 	  // install producer that will satisfy Interests in /dst1 namespace
-	  //ndnGlobalRoutingHelper.AddOrigins ("/Node"+boost::lexical_cast<std::string>(i-nodesNumber/2), producer1);
-	  ndnGlobalRoutingHelper.AddOrigins ("/Node0", producer1);
+	  ndnGlobalRoutingHelper.AddOrigins ("/Node"+boost::lexical_cast<std::string>(consumerNodes[i]), producer1);
 	  producerHelper.Install(producer1);
 	  std::cout <<"ZhangYu 2014-3-7 producer1->GetId(): " <<producer1->GetId() << std::endl;
   }
 
-//  //for(int i=0;i<1;i++)
-//  {
-//	  int i=2;
-//	  // Getting containers for the consumer/producer
-//	  Ptr<Node> consumer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (i));
-//	  // on the first consumer node install a Consumer application
-//	  // that will express interests in /dst1 namespace
-//	  consumerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(i));
-//	  consumerHelper.Install (consumer1);
-//	  std::cout <<"ZhangYu 2014-3-7 consumer1->GetId(): " <<consumer1->GetId() << std::endl;
-//  }
-//
-//  //for(int i=nodesNumber-1;i<nodesNumber;i++)
-//  {
-//	  int i=3;
-//	  //producerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(i-nodesNumber/2));
-//	  producerHelper.SetPrefix ("/Node2");
-//	  Ptr<Node> producer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (i));
-//	  // install producer that will satisfy Interests in /dst1 namespace
-//	  //ndnGlobalRoutingHelper.AddOrigins ("/Node"+boost::lexical_cast<std::string>(i-nodesNumber/2), producer1);
-//	  ndnGlobalRoutingHelper.AddOrigins ("/Node2", producer1);
-//	  producerHelper.Install(producer1);
-//	  std::cout <<"ZhangYu 2014-3-7 producer1->GetId(): " <<producer1->GetId() << std::endl;
-//  }
-
   // Calculate and install FIBs
-  //ndn::GlobalRoutingHelper::CalculateRoutes ();
-  //ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes();
-  //ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutes();
-  ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst();
+	if(routingName.compare("BestRoute")==0){
+	  ndn::GlobalRoutingHelper::CalculateRoutes ();
+	}
+	else if(routingName.compare("MultiPath")==0){
+		ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutes();
+	}
+	else if(routingName.compare("MultiPathPairFirst")==0){
+		ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst();
+	}
+	else if(routingName.compare("Flooding")==0){
+		ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes();
+	}
 
   // The failure of the link connecting consumer and router will start from seconds 10.0 to 15.0
   //Simulator::Schedule (Seconds (10.0), ndn::LinkControlHelper::FailLink, Names::Find<Node> ("Node0"),Names::Find<Node> ("Node4"));
   //Simulator::Schedule (Seconds (15.0), ndn::LinkControlHelper::UpLink,   Names::Find<Node> ("Node0"),Names::Find<Node> ("Node4"));
 
-  Simulator::Stop (Seconds (5.0));
+  Simulator::Stop (Seconds (simulationSpan));
 
-  //ZhangYu Add the trace
-
-  ndn::CsTracer::InstallAll ("cs-trace-multipath.txt", Seconds (1));
-
-  ndn::L3AggregateTracer::InstallAll ("aggregate-trace-multipath.txt", Seconds (1));
-
-  ndn::L3RateTracer::InstallAll ("rate-trace-multipath.txt", Seconds (1));
-
-  ndn::AppDelayTracer::InstallAll ("app-delays-trace-multipath.txt");
-
-  L2RateTracer::InstallAll ("drop-trace-multipath.txt", Seconds (1));
+  //ZhangYu Add the trace，不愿意文件名称还有大小写的区别，所以把 routingName 全部转为小写
+  std::transform(routingName.begin(), routingName.end(), routingName.begin(), ::tolower);
+  string filename=routingName+"-"+boost::lexical_cast<std::string>(InterestsPerSec)+".txt";
+  ndn::CsTracer::InstallAll ("cs-trace-"+filename, Seconds (1));
+  ndn::L3AggregateTracer::InstallAll ("aggregate-trace-"+filename, Seconds (1));
+  ndn::L3RateTracer::InstallAll ("rate-trace-"+filename, Seconds (1));
+  ndn::AppDelayTracer::InstallAll ("app-delays-trace-"+filename);
+  L2RateTracer::InstallAll ("drop-trace-"+filename, Seconds (1));
 
   Simulator::Run ();
   Simulator::Destroy ();
